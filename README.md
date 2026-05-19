@@ -111,9 +111,70 @@ from transformers.models.autocompressor.modeling_autocompressor import AutoCompr
 from transformers import AutoTokenizer
 import torch
 
+---
+
+### 6.2 压缩上下文并生成 summary vectors
+```python
+
+prompt = 'The first name of the current US president is "'
+prompt_tokens = tokenizer(prompt, add_special_tokens=False, return_tensors="pt").input_ids.cuda()
+
+context = """Joe Biden, born in Scranton, Pennsylvania, on November 20, 1942, ..."""
+context_tokens = tokenizer(context, add_special_tokens=False, return_tensors="pt").input_ids.cuda()
+
+summary_vectors = model(context_tokens, output_soft_prompt=True).soft_prompt
+print(f"Compressing {context_tokens.size(1)} tokens to {summary_vectors.size(1)} summary vectors")
+
 model = AutoCompressorForCausalLM.from_pretrained(
     "princeton-nlp/AutoCompressor-Llama-2-7b-6k",
     torch_dtype=torch.bfloat16
 ).eval().cuda()
 
 tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/AutoCompressor-Llama-2-7b-6k")
+
+---
+
+### 6.3 使用 summary vectors 生成
+```Python
+
+generation_with_summary_vecs = model.generate(
+    prompt_tokens,
+    do_sample=False,
+    soft_prompt=summary_vectors,
+    max_new_tokens=12
+)[0]
+
+print("Generation w/ summary vectors:\n" + tokenizer.decode(generation_with_summary_vecs))
+
+---
+
+### 6.4 不使用上下文直接生成
+```Python
+next_tokens_without_context = model.generate(
+    prompt_tokens,
+    do_sample=False,
+    max_new_tokens=11
+)[0]
+
+print("Generation w/o context:\n" + tokenizer.decode(next_tokens_without_context))
+
+---
+
+##  7. 验证结果
+成功运行后，应能观察到如下现象：
+
+长上下文被压缩为固定长度的 summary vectors
+例如：
+
+Compressing 660 tokens to 50 summary vectors
+使用压缩上下文时，模型能够正确利用上下文信息生成：
+
+The first name of the current US president is "Joe" and the last name is "Biden".
+不提供上下文时，模型会输出默认先验知识：
+
+The first name of the current US president is "Donald" and the last name is "Trump".
+这说明实现后的 AutoCompressor 能够正确完成：
+
+长上下文压缩
+soft prompt 输出
+基于压缩上下文的条件生成

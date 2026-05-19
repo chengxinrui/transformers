@@ -110,7 +110,7 @@ AutoCompressor 通过在输入片段后追加 summary tokens，利用这些 toke
 from transformers.models.autocompressor.modeling_autocompressor import AutoCompressorForCausalLM
 from transformers import AutoTokenizer
 import torch
-
+```
 ---
 
 ### 6.2 压缩上下文并生成 summary vectors
@@ -131,7 +131,7 @@ model = AutoCompressorForCausalLM.from_pretrained(
 ).eval().cuda()
 
 tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/AutoCompressor-Llama-2-7b-6k")
-
+```
 ---
 
 ### 6.3 使用 summary vectors 生成
@@ -145,7 +145,7 @@ generation_with_summary_vecs = model.generate(
 )[0]
 
 print("Generation w/ summary vectors:\n" + tokenizer.decode(generation_with_summary_vecs))
-
+```
 ---
 
 ### 6.4 不使用上下文直接生成
@@ -157,10 +157,11 @@ next_tokens_without_context = model.generate(
 )[0]
 
 print("Generation w/o context:\n" + tokenizer.decode(next_tokens_without_context))
-
+```
 ---
 
 ##  7. 验证结果
+```text
 成功运行后，应能观察到如下现象：
 
 长上下文被压缩为固定长度的 summary vectors
@@ -178,3 +179,4 @@ The first name of the current US president is "Donald" and the last name is "Tru
 长上下文压缩
 soft prompt 输出
 基于压缩上下文的条件生成
+```

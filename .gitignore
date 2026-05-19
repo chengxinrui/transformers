@@ -194,7 +194,7 @@ test-results/
 *.rar
 *.gz
 datasets/
-models/
+# models/
 weights/
 cache/
 *.log
